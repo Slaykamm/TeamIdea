@@ -1,0 +1,315 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="weather.css"> 
+    <title>app for TEAMIDEA Junior Developer</title>
+</head>
+<body>
+
+
+  <h1>Вопрос1: </h1>
+  <p>1. День, с минимальной разницей "ощущаемой" и фактической температуры ночью (с указанием разницы в градусах Цельсия)</p>
+  <br> 
+
+  <h2>Город <span>Санкт-Петербург</span></h2>
+  <h3>День с максмальным перепадом тепературы:</h3>
+  <table >
+
+    <thead><tr>
+            <th>Date</th>
+            <th>Night feels like temp, C</th>
+            <th>Night actual temp, C</th>
+            <th>Difference, C</th>
+    </tr></thead>
+
+    <tbody>
+        <tr id = "infoOut">
+        </tr>
+    </tbody>
+</table>
+
+
+
+
+<h1>Вопрос2:</h1>
+<p>2. Максимальную продолжительностью светового дня за ближайшие 5 дней (включая текущий)</p>
+
+<table >
+
+    <thead><tr>
+            <th>Date</th>
+            <th>Sunrise</th>
+            <th>Sunset</th>
+            <th>Maximum Day lenght (H:M:S)</th>
+
+    </tr></thead>
+
+    <tbody>
+        <tr id = "infoOut2">
+        </tr>
+    </tbody>
+</table>
+
+    
+
+</body>
+
+<script>
+
+// 3a. Задание можно выполнить на любом языке программирования.
+// Задача: разработать программу, которая на основании данных сервиса https://openweathermap.org/ 
+//(требует регистрации, достаточно бесплатного плана Free) будет выводить следующие данные для Вашего города:
+// 1. День, с минимальной разницей "ощущаемой" и фактической температуры ночью (с указанием разницы в градусах Цельсия)
+// 2. Максимальную продолжительностью светового дня (считать, как разницу между временем заката и рассвета) за ближайшие 5 дней (включая текущий), 
+//с указанием даты.
+
+function getCityInfo(url){
+
+    fetchedData = fetch(url, {method:'GET',
+            headers: new Headers({                   
+                'User-agent': 'Chrome/64.0 My Own Agent',
+
+            }, )
+        }, )
+
+        return fetchedData
+
+            .then(response => response.json())        
+            .then(data => {
+                const citiInfo = data;
+
+                return citiInfo;
+            });
+
+}
+
+function writeElement(id, info){
+    el = document.getElementById(id)
+    const newEl = document.createElement('td');
+   
+        newEl.textContent = info;
+        el.appendChild(newEl) 
+    return el
+    
+}
+
+
+function getCovertedTime(oldTime, interval)
+{
+    var a = new Date(oldTime * 1000);
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var year = a.getFullYear();
+    var month = months[a.getMonth()];
+    var date = a.getDate();
+    var hour = a.getHours();
+    var min = "0" + a.getMinutes();
+    var sec ="0" + a.getSeconds();
+    
+    
+    if (interval == 1){
+
+        var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+    }
+
+    if (interval == 2){
+       var time = date + ' ' + month + ' ' + year  ; 
+    }
+
+    if (interval == 3){
+       var time = hour + ':' + min + ':' + sec  ; 
+    }
+    return time
+}
+
+
+
+//наш город Saint Petersburg, Russia
+
+    //ответ на вопрос №1
+
+    
+const APIkey = '16da20756bc63384418e1c8dc93e50a6';
+const cityName ='Saint Petersburg';
+localStorage.setItem('tempDifference', 100);
+const city = {
+        "id": 498817,
+        "name": "Saint Petersburg",
+        "state": "",
+        "country": "RU",
+        "coord": {
+            "lon": 30.264168,
+            "lat": 59.894444
+        }};
+
+const oneDayLength = 86400;
+const nowDay = Date.now() / 1000 | 0;
+
+var outPutArray = []
+
+var citycoordlat = city.coord.lat; 
+var citycoordlon = city.coord.lon;
+
+
+let TargetDay = {
+            date: 0,
+            night_feels_like: 0,
+            night_actual: 0,
+            difference: 100
+        }
+
+
+for (let i = 5; i>0; i--){
+    
+
+    let dateWithOffset = nowDay - i*oneDayLength
+
+
+
+    let testTargetDay = {
+            date: 0,
+            night_feels_like: 0,
+            night_actual: 0,
+            difference: 100
+        }
+
+          
+        const url = `https://api.openweathermap.org/data/2.5/onecall/timemachine?lat=${citycoordlat}&lon=${citycoordlon}&dt=${dateWithOffset}&appid=${APIkey}`
+
+        cityInfo = getCityInfo(url).then(responce =>{
+
+
+            let data = responce;
+
+
+
+            for (let z=0; z<data.hourly.length; z++){
+
+                if (data.current.sunrise > data.hourly[z].dt || data.current.sunset < data.hourly[z].dt ){
+
+                    if (Math.abs(data.current.feels_like - data.current.temp)<testTargetDay.difference){
+
+                        testTargetDay.date = data.current.dt;
+                        testTargetDay.night_feels_like = data.current.feels_like;
+                        testTargetDay.night_actual = data.current.temp;
+                        testTargetDay.difference = (Math.abs(data.current.temp - data.current.feels_like));
+
+                        
+                    }
+
+                    
+
+                }
+
+                
+            }
+            console.log("each day", testTargetDay)   
+                maxDifference = localStorage.getItem('tempDifference')
+
+            console.log(maxDifference, testTargetDay.difference)
+
+
+
+                if (maxDifference >> testTargetDay.difference){
+                    console.log("write")
+
+                    TargetDay.date = getCovertedTime(data.current.dt, 1);
+                    TargetDay.night_feels_like = (273 - data.current.feels_like).toFixed(2);
+                    TargetDay.night_actual = (273 - data.current.temp).toFixed(2);
+                    TargetDay.difference = (Math.abs(data.current.temp - data.current.feels_like)).toFixed(2);
+
+
+                    localStorage.setItem('tempDifference', testTargetDay.difference );
+
+
+                }
+
+
+                if (i == 1){
+
+
+                    writeElement("infoOut", TargetDay.date)
+                    writeElement("infoOut", TargetDay.night_feels_like)
+                    writeElement("infoOut", TargetDay.night_actual)
+                    writeElement("infoOut", TargetDay.difference)
+
+                }
+
+        })
+
+
+
+
+}
+
+maxDifference = localStorage.getItem('tempDifference')
+console.log("nu i nu", maxDifference)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //Ответ на вопрос2
+
+    const url2 = `https://api.openweathermap.org/data/2.5/onecall?lat=${city.coord.lat}&lon=${city.coord.lon}&exclude=minutely,hourly&appid=${APIkey}`;
+
+    cityInfo = getCityInfo(url2).then(responce =>{
+
+
+    let data = responce;
+
+
+    let targetLightDay = {
+        date: 0,
+        sunset: 0,
+        sunrise: 0,
+        difference: 0
+    }
+
+
+        for (let i=0; i<5; i++){
+
+
+            if ((data.daily[i].sunset - data.daily[i].sunrise) > targetLightDay.difference){
+
+  
+                targetLightDay.sunrise = data.daily[i].sunrise;
+                targetLightDay.sunset = data.daily[i].sunset;
+                targetLightDay.date = data.daily[i].dt;
+                targetLightDay.difference = (data.daily[i].sunset - data.daily[i].sunrise);
+
+
+            }
+
+        }
+
+        
+        targetLightDay.sunrise = getCovertedTime(targetLightDay.sunrise, 1);
+        targetLightDay.sunset = getCovertedTime(targetLightDay.sunset, 1);
+        targetLightDay.date = getCovertedTime(targetLightDay.date, 2);
+        targetLightDay.difference = getCovertedTime((targetLightDay.difference), 3);
+ 
+        writeElement("infoOut2", targetLightDay.date)
+        writeElement("infoOut2", targetLightDay.sunrise)
+        writeElement("infoOut2", targetLightDay.sunset)
+        writeElement("infoOut2", targetLightDay.difference)
+
+
+    })
+
+</script>
+
+</html>
